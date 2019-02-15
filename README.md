@@ -1,10 +1,9 @@
 # feign-x
---------
 feign-x主要是基于spring-cloud-feign，对feignClient进行了扩展，使其能够支持原生Scoket、Thrift、Dubbo方式调用其他的SpringCloud微服务。
 
 ## 使用说明
 ### 客户端配置
-####1、添加Maven依赖
+#### 1、添加Maven依赖
 ``` xml
 ...
 	<properties>
@@ -20,7 +19,7 @@ feign-x主要是基于spring-cloud-feign，对feignClient进行了扩展，使�
 ...
 ```
 
-####2、在Feign客户端的启动类上增加@EnableFeignClientsExt注解
+#### 2、在Feign客户端的启动类上增加@EnableFeignClientsExt注解
 ``` xml
 @EnableFeignClientsExt
 @EnableDiscoveryClient
@@ -34,7 +33,7 @@ public class FeignXClientApplication {
 }
 ```
 
-####3、在Feign客户端的调用的Api接口上，增加@FeignClientExt注解
+#### 3、在Feign客户端的调用的Api接口上，增加@FeignClientExt注解
 ``` java
 @FeignClientExt(name = "feign-server", protocol = ProtocolType.SOCKET,configuration=FeignClientsConfigurationExt.class)
 public interface ApiServiceByRPC {
@@ -51,7 +50,7 @@ public interface ApiServiceByRPC {
 在`@FeignClientExt`的`protocol`属性中，可设置Feign客户端调用后端服务时，所使用的RPC协议的类型，未设置`protocol`时，默认使用HTTP的调用方式。feign-x目前支持HTTP、原生Scoket、Thrift、Dubbo等4种调用协议。
 
 ### 服务端配置
-####1、添加Maven依赖
+#### 1、添加Maven依赖
 ``` xml
 ...
 	<properties>
@@ -67,7 +66,7 @@ public interface ApiServiceByRPC {
 ...
 ```
 
-####2、在Feign服务端的启动类上增加@EnableRpcServer注解
+#### 2、在Feign服务端的启动类上增加@EnableRpcServer注解
 ``` xml
 @EnableRpcServer
 @SpringBootApplication
@@ -80,7 +79,7 @@ public class FeignXServerApplication {
 }
 ```
 
-####3、在需要支持RPC调用的服务端Controller接口上，增加@RpcController注解
+#### 3、在需要支持RPC调用的服务端Controller接口上，增加@RpcController注解
 ``` java
 @RpcController(protocol = {ProtocolType.SOCKET})
 @RestController
