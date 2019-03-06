@@ -15,7 +15,6 @@ import feign.FeignAutoConfigurationExt;
 import feign.FeignClientsRegistrarExt;
 import feign.FeignRibbonClientAutoConfigurationExt;
 
-
 /**
  * Scans for interfaces that declare they are feign clients (via {@link FeignClient
  * <code>@FeignClient</code>}). Configures component scanning directives for use with

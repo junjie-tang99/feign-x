@@ -30,6 +30,7 @@ import com.netflix.hystrix.HystrixCommand;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.contract.SpringMvcContractExt;
+import feign.decoder.SpringDecoderExt;
 import feign.hystrix.HystrixFeign;
 import feign.hystrix.HystrixFeignBuilderExt;
 
@@ -58,7 +59,8 @@ public class FeignClientsConfigurationExt {
 	@ConditionalOnMissingBean
 	public Decoder feignDecoder() {
 		LOGGER.info("Bean 'org.springframework.cloud.netflix.feign.support.ResponseEntityDecoder' has been created.");
-		return new ResponseEntityDecoder(new SpringDecoder(this.messageConverters));
+		//return new ResponseEntityDecoder(new SpringDecoder(this.messageConverters));
+		return new ResponseEntityDecoder(new SpringDecoderExt(this.messageConverters));
 	}
 
 	@Bean

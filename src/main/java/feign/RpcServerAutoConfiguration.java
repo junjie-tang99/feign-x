@@ -64,8 +64,8 @@ public class RpcServerAutoConfiguration implements ApplicationContextAware,Envir
 	public RpcServerGroup getRpcServerGroup() throws IOException {
 		RpcServerGroup serverGroup = new RpcServerGroup();
 		int socketPort = environment.getProperty("eureka.instance.metadata-map.socket-port", Integer.class, ProtocolType.SOCKET.getDefaultPort());
-		int dubboPort = environment.getProperty("eureka.instance.metadata-map.socket-port", Integer.class, ProtocolType.DUBBO.getDefaultPort());
-		int thriftPort = environment.getProperty("eureka.instance.metadata-map.socket-port", Integer.class, ProtocolType.THRIFT.getDefaultPort());
+		int dubboPort = environment.getProperty("eureka.instance.metadata-map.dubbo-port", Integer.class, ProtocolType.DUBBO.getDefaultPort());
+		int thriftPort = environment.getProperty("eureka.instance.metadata-map.thrift-port", Integer.class, ProtocolType.THRIFT.getDefaultPort());
 		Map<ProtocolType,RpcServerContext> contextMap = getRpcServerContext();
 		
 		if (contextMap.containsKey(ProtocolType.SOCKET))
@@ -77,6 +77,7 @@ public class RpcServerAutoConfiguration implements ApplicationContextAware,Envir
 	//并解析其中的方法，并将方法转换成RpcMethodWrapper
 	public Map<ProtocolType,RpcServerContext> getRpcServerContext() {
 		Map<ProtocolType,RpcServerContext> contextMap = new HashMap<ProtocolType,RpcServerContext>();
+		//获取所有使用@RpcController注解标记的类名称
 		String[] beanNames = applicationContext.getBeanNamesForAnnotation(RpcController.class);
 		if (beanNames.length == 0) {
 		    LOGGER.error("Can't search any rpc controller annotated with @RpcController");

@@ -7,6 +7,8 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -47,7 +49,7 @@ public class SocketClient implements Client {
 			String host = uri.getHost();
 			int port = uri.getPort();
 			String invokeMethodName = this.getInvokeMethod(request.url());
-			Map<String,String> params = this.getRequestParams(request.url());
+			//Map<String,String> params = this.getRequestParams(request.url());			
 			PpcPacketBody packetBody = PpcPacketBody.class.cast(BytesConversionUtils.toObject(request.body()));
 			//创建Socket的连接endpoint
 			InetSocketAddress endpoint = new InetSocketAddress(host,port);
@@ -61,18 +63,22 @@ public class SocketClient implements Client {
 			//创建Socket的Ouput对象，用于发送请求
 			ObjectOutputStream output = new ObjectOutputStream(this.socket.getOutputStream());
 			//构建请求的包
-			RpcPacket requestPacket = new RpcPacket(invokeMethodName,packetBody);
+			RpcPacket requestPacket = new RpcPacket(invokeMethodName,request.headers(),packetBody);
 			output.writeObject(requestPacket);
 			//创建Socket的Input对象，用于接受远程调用的结果
 			ObjectInputStream input = new ObjectInputStream(this.socket.getInputStream()); 
-			Object result = input.readObject();
+			//构建返回的包
+			RpcPacket responsePacket = (RpcPacket)input.readObject();
 			input.close();
 			output.close();
+			//获取返回包体中的结果数据
+			byte[] result = BytesConversionUtils.toBytes(responsePacket.getPacketBody().getResult());
 			return Response.builder()
-						.status(200)
-						.headers(request.headers())
-						.body(toByteArray(((RpcPacket)result).getResult().toString()))
-						.build();
+					.status(200)
+					.headers(responsePacket.getHeaders())
+					.body(result)
+					.build();
+			
 		}catch(Exception e) {
 			return Response.builder().status(502).headers(request.headers()).reason(e.getMessage()).build();
 		}finally {
@@ -94,22 +100,6 @@ public class SocketClient implements Client {
 	public Map<String,String> getRequestParams(String url) {
 		return URLUtils.resolveAllParams(url);
 	}
-	
-    public byte[] toByteArray (Object obj) {      
-        byte[] bytes = null;      
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();      
-        try {        
-            ObjectOutputStream oos = new ObjectOutputStream(bos);         
-            oos.writeObject(obj);        
-            oos.flush();         
-            bytes = bos.toByteArray ();      
-            oos.close();         
-            bos.close();        
-        } catch (IOException ex) {        
-            ex.printStackTrace();   
-        }      
-        return bytes;    
-    } 
     
 	
 	public static class Builder{

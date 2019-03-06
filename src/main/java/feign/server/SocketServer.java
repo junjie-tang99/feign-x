@@ -6,6 +6,10 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -13,7 +17,10 @@ import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 
+import feign.enumerate.ProtocolType;
+import feign.packet.PpcPacketBody;
 import feign.packet.RpcPacket;
 import feign.server.context.RpcServerContext;
 import feign.server.method.RpcMethodWrapper;
@@ -84,15 +91,10 @@ public class SocketServer implements IServer {
 			ObjectOutputStream output = null;
 			try {
 				//从上下文中获取所有，所有支持远程调用的方法
-				
 				input = new ObjectInputStream(socket.getInputStream());
 				RpcPacket requestPacket = (RpcPacket) input.readObject();
-				
-				String invokeMethodName = requestPacket.getInvokeMethod();
-				
+				String invokeMethodName = requestPacket.getInvokeMethod();			
 				Map<String,RpcMethodWrapper> methodMapping = context.getMethodMapping();
-//				String className = invokeMethodName.substring(0, invokeMethodName.lastIndexOf("."));
-//				String methodName = invokeMethodName.substring(invokeMethodName.lastIndexOf(".")+1,invokeMethodName.length());
 
 		        //响应包体
 		        RpcPacket responsePacket  = null;
@@ -101,15 +103,32 @@ public class SocketServer implements IServer {
 					//在MethodMapping中找不到RPC的方法
 					//则返回无法找到对应Mapping的错误信息
 					Object result = "Can not find " + requestPacket.getInvokeMethod() + " in the RPC method mapping!";
-					responsePacket = new  RpcPacket(requestPacket.getInvokeMethod(), requestPacket.getPacketBody() , result);
+					//设置返回的头信息
+					Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+					ArrayList<String> headerValueList = new ArrayList<String>(Arrays.asList(ProtocolType.SOCKET.getName()));
+					headers.put("X-RPC-CALL", headerValueList);
+					//设置返回包体大小
+					//headers.put("Content-Length", new ArrayList<String>(Arrays.asList());
+					//生成返回的包
+					PpcPacketBody body = new PpcPacketBody(result);
+					responsePacket = new  RpcPacket(requestPacket.getInvokeMethod(),headers,null,body);
 					
 				}else {
 					//获取支持远程调用方法的Wrapper
 					RpcMethodWrapper wrapper = methodMapping.get(invokeMethodName);
 					Method method = wrapper.getMethod();
+					Class<?> returnType = wrapper.getReturnType();
 					Object[] args = requestPacket.getPacketBody().getMethodArgs();
 					Object result = method.invoke(wrapper.getTarget(), args);
-			        responsePacket = new  RpcPacket(requestPacket.getInvokeMethod(), requestPacket.getPacketBody(), result);
+					//设置返回的头信息
+					Map<String, Collection<String>> headers = new HashMap<String, Collection<String>>();
+					ArrayList<String> headerValueList = new ArrayList<String>(Arrays.asList(ProtocolType.SOCKET.getName()));
+					headers.put("X-RPC-CALL", headerValueList);
+					//设置返回包体大小
+					//headers.put("Content-Length", new ArrayList<String>(Arrays.asList());
+					//生成返回的包
+					PpcPacketBody body = new PpcPacketBody(result);
+			        responsePacket = new  RpcPacket(requestPacket.getInvokeMethod(),headers,returnType,body);
 				}
 				
 		        output = new ObjectOutputStream(socket.getOutputStream());
